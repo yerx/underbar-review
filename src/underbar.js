@@ -65,7 +65,6 @@
         iterator(collection[key], key, collection);
       }
     }
-
   };
 
   // Returns the index at which value can be found in the array, or -1 if value
@@ -112,28 +111,27 @@
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array, isSorted, iterator) {
-
     var obj = {};
 
     var result = [];
-    iterator = iterator === undefined ? _.identity(element) : iterator;
-    _.each(array, function(element) {
 
+    iterator = iterator === undefined ? _.identity : iterator;
 
+    _.each(array, function(value) {   // [1, 2, 2, 3, 4, 4]
+      var key = iterator(value);
+      if(obj[key] === undefined) { // if key does not exist
+        obj[key] = value;
+        // obj = {true: 1, false: 2}
+      }
+    })
 
-    });
+    _.each(obj, function(value) {
+      result.push(value)
+    })
 
-    //iterate over the collection
-    // invoke indexOf to check if current element exists in the array
-      //if not, apply the iterator and push it to the result array
-
-     // [1, 2, 3, 4, 5] isSorted
-     // [2, 5, 6, 7, 1] !isSorted
-
-    //  [1, 1, 2, 3, 4]
-
-    // return result array
-
+    console.log("RESULTS:")
+    console.log(result);
+    return result;
   };
 
 
@@ -190,35 +188,20 @@
   //   var identity = _.reduce([5], function(total, number){
   //     return total + number * number;
   //   }); // should be 5, regardless of the iterator function passed in
-  //          No accumulator is given so the first element is used.
+  // No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
-    /*var sum = _.reduce(numbers, function(total, number){
-    return total + number;*/
-    accumulator = accumulator === undefined  ? collection[0] : accumulator;
-    // define result variable
-    //var result;
-    // if arguments.length === 3
-    //if(arguments.length === 3) {
-      //result = accumulator;
-      // iterate over the array
-    _.each(collection, function(element) {
-        return accumulator = iterator(accumulator, element);
-    //};
 
-    });
-
+    if(arguments.length === 2) {
+      var accumulator = collection[0];
+      for(var i = 1; i < collection.length; i++) {
+        accumulator = iterator(accumulator, collection[i])
+      }
+    } else {
+      _.each(collection, function(element) {
+        accumulator = iterator(accumulator, element);
+      })
+    }
     return accumulator;
-
-    // if(arguments.length === 2) {
-    //   var accumulator = collection[0];
-    //   for(var i = 1; i < collection.length; i++) {
-    //     accumulator = iterator(collection[i])
-    //   }
-    // } else { // arguments.length === 3
-
-    // }
-
-
   };
 
   // Determine if the array or object contains a given value (using `===`).
@@ -237,12 +220,22 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    iterator = iterator || _.identity;
+
+    return !!_.reduce(collection, function(isTrue, element) {
+      return isTrue && iterator(element);
+    }, true);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    iterator = iterator || _.identity;
+
+    return !!_.reduce(collection, function(isFalse, element) {
+      return isFalse || iterator(element);
+    }, false);
   };
 
 
@@ -265,11 +258,26 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    // iterate over arguments (each)
+    _.each(arguments, function(arg) {
+      _.each(arg, function(value, key) {
+          obj[key] = value;
+      });
+    });
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    _.each(arguments, function(arg) {
+      _.each(arg, function(value, key) {
+        if(obj[key] === undefined) {
+          obj[key] = value;
+        }
+      });
+    });
+    return obj;
   };
 
 
@@ -313,6 +321,16 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var obj = {};
+
+    return function() {
+
+      var arg = JSON.stringify(arguments);
+      if (!obj[arg]) {
+        obj[arg] = func.apply(null, arguments);
+      }
+      return obj[arg];
+    }
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -322,6 +340,12 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+
+    if (arguments.length > 2) {
+      setTimeout(func(arguments[2], arguments[3]), wait);
+    } else {
+      setTimeout(func, wait);
+    }
   };
 
 
